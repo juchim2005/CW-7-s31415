@@ -24,7 +24,7 @@ public class DbService(IConfiguration config) : IDbService
     {
         var result = new List<TripGetDTO>();
         await using var connection = new SqlConnection(_connectionString);
-        
+        //Wybiera informacje o wycieczkach
         const string sql = "SELECT t.IdTrip, t.Name, t.Description, t.DateFrom, t.DateTo, t.MaxPeople, c.Name AS CountryName" +
                            " FROM Trip t LEFT JOIN Country_Trip ct ON t.IdTrip = ct.IdTrip" +
                            " LEFT JOIN Country c ON ct.IdCountry = c.IdCountry";
@@ -51,7 +51,7 @@ public class DbService(IConfiguration config) : IDbService
     {
         var result = new List<TripGetDTO>();
         using var connection = new SqlConnection(_connectionString);
-        
+        //Wybiera info o wycieczkach dla danego klienta
         const string sql = "SELECT t.IdTrip, t.Name, t.Description, t.DateFrom, t.DateTo, t.MaxPeople, c.Name AS CountryName" +
                            " FROM Trip t INNER JOIN Client_Trip ct ON t.IdTrip = ct.IdTrip" +
                            " LEFT JOIN Country_Trip cct ON t.IdTrip = cct.IdTrip LEFT JOIN Country c ON cct.IdCountry = c.IdCountry" +
@@ -89,7 +89,7 @@ public class DbService(IConfiguration config) : IDbService
     public async Task<Client> CreateClientAsync(CreateClientDTO client)
     {
         await using var connection = new SqlConnection(_connectionString);
-        
+        //Tworzenie klienta
         const string sql = "INSERT INTO Clients (FirstName, LastName, Email, Telephone, Pesel)"+
                            " VALUES (@FirstName, @LastName, @Email, @Telephone, @Pesel); " +
                            "SELECT scope_identity()";
@@ -119,7 +119,7 @@ public class DbService(IConfiguration config) : IDbService
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
         
-
+        //sprawdzenie czy klient istnieje
         await using (var checkClientCmd = new SqlCommand("SELECT COUNT(1) FROM Clients WHERE Id = @ClientId", connection))
         {
             checkClientCmd.Parameters.AddWithValue("@ClientId", clientId);
@@ -129,7 +129,7 @@ public class DbService(IConfiguration config) : IDbService
                 throw new NotFoundException("Client not found");
         }
 
-
+        //sprawdzenie czy wycieczka istnieje
         await using (var checkTripCmd = new SqlCommand("SELECT COUNT(1) FROM Trips WHERE Id = @TripId", connection))
         {
             checkTripCmd.Parameters.AddWithValue("@TripId", tripId);
@@ -172,7 +172,7 @@ public class DbService(IConfiguration config) : IDbService
     {
         await using var connection = new SqlConnection(_connectionString);
         await connection.OpenAsync();
-        
+        //sprawdzanie czy to w ogóle istnieje
         await using (var checkRegistrationCmd = new SqlCommand(
                          "SELECT COUNT(1) FROM Client_Trip WHERE IdClient = @ClientId AND IdTrip = @TripId", 
                          connection))
@@ -184,7 +184,7 @@ public class DbService(IConfiguration config) : IDbService
             if (registrationExists == 0)
                 throw new NotFoundException("Registration not found");
         }
-        
+        //usuwanie klienta z wycieczki
         var deleteQuery = "DELETE FROM Client_Trip WHERE IdClient = @ClientId AND IdTrip = @TripId";
         var deleteCmd = new SqlCommand(deleteQuery, connection);
         deleteCmd.Parameters.AddWithValue("@ClientId", clientId);
